@@ -1,4 +1,4 @@
-# NIH SABV Behavioral Data Pipeline
+# NeuroPipe-SABV
 
 A Streamlit web application that automates the analysis of preclinical 
 behavioral neuroscience data in compliance with the NIH Sex as a Biological 
