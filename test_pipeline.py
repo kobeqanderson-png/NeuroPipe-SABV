@@ -1,33 +1,65 @@
-#!/usr/bin/env python3
-"""Automated test suite for NIH SABV data processing pipeline (20 scenarios)."""
+"""Pytest suite for NIH SABV data processing pipeline.
+
+Run with:
+    pytest test_pipeline.py -v
+"""
 
 import sys
-import pandas as pd
-import numpy as np
 from pathlib import Path
+import io
 
-sys.path.insert(0, str(Path(__file__).parent))
+import numpy as np
+import pandas as pd
+import pytest
+from scipy import stats as scipy_stats
 
-from src.data_load import read_csv
+# Ensure src is importable
+project_root = Path(__file__).parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+from src.data_load import read_csv, read_excel
 from src.cleaning import basic_clean
 from src.features import (
-    add_log_feature, 
+    add_log_feature,
     add_missing_indicators,
     add_polynomial_features,
     add_interaction_features,
-    standardize_features
+    standardize_features,
 )
 from src.visualize import boxplot_by_category
 
-# Import functions from app
-sys.path.insert(0, str(Path(__file__).parent))
-import importlib.util
-spec = importlib.util.spec_from_file_location("app", "app.py")
-# Skip the streamlit stuff - just test the functions
-import re
-from scipy import stats as scipy_stats
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def synthetic_df():
+    """Standard 50-row synthetic dataset."""
+    np.random.seed(42)
+    return pd.DataFrame({
+        "Animal_ID": range(1, 51),
+        "Weight": np.random.normal(25, 5, 50),
+        "Length": np.random.normal(20, 3, 50),
+        "Velocity": np.abs(np.random.normal(10, 2, 50)),
+    })
+
+
+@pytest.fixture
+def classified_df(synthetic_df):
+    """Synthetic dataset with Sex column (threshold=16)."""
+    df = synthetic_df.copy()
+    df["Sex"] = np.where(df["Animal_ID"] <= 16, "Male", "Female")
+    return df
+
+
+# ---------------------------------------------------------------------------
+# Helper functions (mirroring app logic without Streamlit dependency)
+# ---------------------------------------------------------------------------
 
 def parse_animal_number(value):
+    """Extract numeric animal ID from mixed formats."""
     if pd.isna(value):
         return np.nan
     if isinstance(value, (int, float, np.integer, np.floating)):
@@ -36,47 +68,35 @@ def parse_animal_number(value):
     if not text:
         return np.nan
     lower_text = text.lower()
-    prefixed_match = re.search(r"(?:rat|subject|animal)\s*[-_#:]?\s*(\d+(?:\.\d+)?)", lower_text)
+    prefixed_match = __import__("re").search(
+        r"(?:rat|subject|animal)\s*[-_#:]?\s*(\d+(?:\.\d+)?)",
+        lower_text,
+    )
     if prefixed_match:
         return float(prefixed_match.group(1))
-    numeric_only_match = re.fullmatch(r"\d+(?:\.\d+)?", lower_text)
+    numeric_only_match = __import__("re").fullmatch(r"\d+(?:\.\d+)?", lower_text)
     if numeric_only_match:
         return float(numeric_only_match.group(0))
-    match = re.search(r"\d+(?:\.\d+)?", text)
+    match = __import__("re").search(r"\d+(?:\.\d+)?", text)
     if match:
         return float(match.group(0))
     return np.nan
 
+
 def parse_animal_number_series(series):
     return series.apply(parse_animal_number)
 
-def ttest_for_groups(df, value_col, group_col="Sex"):
-    male_data = df[df[group_col] == 'Male'][value_col].dropna()
-    female_data = df[df[group_col] == 'Female'][value_col].dropna()
-    if len(male_data) > 1 and len(female_data) > 1:
-        t_stat, p_value = scipy_stats.ttest_ind(male_data, female_data, equal_var=False)
-        return t_stat, p_value, len(male_data), len(female_data)
-    return np.nan, np.nan, len(male_data), len(female_data)
-
-def effect_size_cohens_d(group1, group2):
-    n1, n2 = len(group1), len(group2)
-    var1, var2 = group1.var(ddof=1), group2.var(ddof=1)
-    if n1 < 2 or n2 < 2:
-        return np.nan
-    pooled_std = np.sqrt(((n1 - 1) * var1 + (n2 - 1) * var2) / (n1 + n2 - 2))
-    if pooled_std == 0:
-        return np.nan
-    return (group1.mean() - group2.mean()) / pooled_std
 
 def parse_id_list(raw_text):
+    """Parse comma-separated IDs/ranges into a set of floats."""
     values = set()
     invalid_tokens = []
-    for token in raw_text.split(','):
+    for token in raw_text.split(","):
         token = token.strip()
         if not token:
             continue
-        if '-' in token:
-            parts = token.split('-', 1)
+        if "-" in token:
+            parts = token.split("-", 1)
             if len(parts) != 2:
                 invalid_tokens.append(token)
                 continue
@@ -87,8 +107,7 @@ def parse_id_list(raw_text):
                 invalid_tokens.append(token)
                 continue
             if float(start).is_integer() and float(end).is_integer():
-                start_i = int(start)
-                end_i = int(end)
+                start_i, end_i = int(start), int(end)
                 lo, hi = (start_i, end_i) if start_i <= end_i else (end_i, start_i)
                 for v in range(lo, hi + 1):
                     values.add(float(v))
@@ -103,302 +122,379 @@ def parse_id_list(raw_text):
     return values, invalid_tokens
 
 
-# ============================================================================
-# TEST SCENARIOS
-# ============================================================================
-
-test_results = []
-
-def log_test(test_num, test_name, status, details=""):
-    result = {
-        "Test": test_num,
-        "Name": test_name,
-        "Status": status,
-        "Details": details
-    }
-    test_results.append(result)
-    status_icon = "✓" if status == "PASS" else "✗" if status == "FAIL" else "⚠"
-    print(f"{status_icon} Test {test_num}: {test_name} - {status} {details}")
+def ttest_for_groups(df, value_col, group_col="Sex"):
+    male_data = df[df[group_col] == "Male"][value_col].dropna()
+    female_data = df[df[group_col] == "Female"][value_col].dropna()
+    if len(male_data) > 1 and len(female_data) > 1:
+        t_stat, p_value = scipy_stats.ttest_ind(
+            male_data, female_data, equal_var=False
+        )
+        return t_stat, p_value, len(male_data), len(female_data)
+    return np.nan, np.nan, len(male_data), len(female_data)
 
 
-print("=" * 80)
-print("NIH SABV DATA PROCESSING PIPELINE - 20 TEST SCENARIOS")
-print("=" * 80)
+def effect_size_cohens_d(group1, group2):
+    n1, n2 = len(group1), len(group2)
+    var1, var2 = group1.var(ddof=1), group2.var(ddof=1)
+    if n1 < 2 or n2 < 2:
+        return np.nan
+    pooled_std = np.sqrt(((n1 - 1) * var1 + (n2 - 1) * var2) / (n1 + n2 - 2))
+    if pooled_std == 0:
+        return np.nan
+    return (group1.mean() - group2.mean()) / pooled_std
 
-# Test 1: Create synthetic data
-try:
-    np.random.seed(42)
-    df_test = pd.DataFrame({
-        'Animal_ID': range(1, 51),
-        'Weight': np.random.normal(25, 5, 50),
-        'Length': np.random.normal(20, 3, 50),
-        'Velocity': np.abs(np.random.normal(10, 2, 50)),
-    })
-    log_test(1, "Create synthetic dataset", "PASS", f"50 rows, 4 cols")
-except Exception as e:
-    log_test(1, "Create synthetic dataset", "FAIL", str(e))
 
-# Test 2: Basic cleaning
-try:
-    df_clean = basic_clean(df_test.copy())
-    assert len(df_clean) > 0
-    log_test(2, "Basic cleaning", "PASS", f"{len(df_clean)} rows after cleaning")
-except Exception as e:
-    log_test(2, "Basic cleaning", "FAIL", str(e))
+# ---------------------------------------------------------------------------
+# Data loading
+# ---------------------------------------------------------------------------
 
-# Test 3: Parse animal numbers
-try:
-    animal_nums = parse_animal_number_series(df_test['Animal_ID'])
-    assert animal_nums.notna().sum() == 50
-    log_test(3, "Parse animal numbers", "PASS", "All 50 IDs parsed")
-except Exception as e:
-    log_test(3, "Parse animal numbers", "FAIL", str(e))
+class TestDataLoad:
+    def test_read_csv_utf8(self):
+        csv_bytes = b"A,B\n1,2\n3,4"
+        df = read_csv(io.BytesIO(csv_bytes))
+        assert df.shape == (2, 2)
+        assert list(df.columns) == ["A", "B"]
 
-# Test 4: Classify by threshold
-try:
-    threshold = 16
-    sex_class = np.where(
-        animal_nums <= threshold, 'Male',
-        np.where(animal_nums > threshold, 'Female', 'Unclassified')
+    def test_read_csv_latin1_fallback(self):
+        csv_bytes = "A,B\n1, café\n3,4".encode("latin1")
+        df = read_csv(io.BytesIO(csv_bytes))
+        assert df.shape == (2, 2)
+        assert "café" in df.iloc[1, 1]
+
+    def test_read_csv_unsupported_encoding_raises(self):
+        csv_bytes = b"\xff\xfe invalid"
+        with pytest.raises(ValueError, match="Could not decode CSV"):
+            read_csv(io.BytesIO(csv_bytes))
+
+
+# ---------------------------------------------------------------------------
+# Data cleaning
+# ---------------------------------------------------------------------------
+
+class TestCleaning:
+    def test_basic_clean_preserves_shape_with_no_issues(self, synthetic_df):
+        df_clean = basic_clean(synthetic_df.copy())
+        assert len(df_clean) == len(synthetic_df)
+        assert len(df_clean.columns) >= len(synthetic_df.columns)
+
+    def test_basic_clean_drops_duplicates(self, synthetic_df):
+        df_dup = pd.concat([synthetic_df, synthetic_df.iloc[[0]]], ignore_index=True)
+        df_clean = basic_clean(df_dup)
+        assert len(df_clean) == len(synthetic_df)
+
+    def test_basic_clean_fills_numeric_nans(self):
+        df = pd.DataFrame({"A": [1.0, np.nan, 3.0], "B": ["x", "y", "z"]})
+        df_clean = basic_clean(df)
+        assert df_clean["A"].isna().sum() == 0
+        # median of [1.0, 3.0] is 2.0
+        assert df_clean.loc[1, "A"] == pytest.approx(2.0)
+
+    def test_basic_clean_strips_column_names(self):
+        df = pd.DataFrame({"  Col A  ": [1, 2], "B ": [3, 4]})
+        df_clean = basic_clean(df)
+        assert "Col A" in df_clean.columns
+        assert "B" in df_clean.columns
+
+    def test_basic_clean_drops_rows_missing_required_ids(self):
+        df = pd.DataFrame({"ID": [1, np.nan, 3], "Val": [10, 20, 30]})
+        df_clean = basic_clean(df, id_cols=["ID"])
+        assert len(df_clean) == 2
+        assert 2 not in df_clean.index
+
+
+# ---------------------------------------------------------------------------
+# Animal ID parsing
+# ---------------------------------------------------------------------------
+
+class TestAnimalIDParsing:
+    @pytest.mark.parametrize(
+        "input_val,expected",
+        [
+            (1, 1.0),
+            (1.5, 1.5),
+            ("rat17", 17.0),
+            ("subject_5", 5.0),
+            ("animal-123", 123.0),
+            ("42", 42.0),
+            ("mixed_text_99_here", 99.0),
+            ("", np.nan),
+            (np.nan, np.nan),
+        ],
     )
-    df_test['Sex'] = sex_class
-    male_count = (df_test['Sex'] == 'Male').sum()
-    female_count = (df_test['Sex'] == 'Female').sum()
-    log_test(4, "Classify by threshold (≤16=M, >16=F)", "PASS", f"M={male_count}, F={female_count}")
-except Exception as e:
-    log_test(4, "Classify by threshold", "FAIL", str(e))
+    def test_parse_animal_number(self, input_val, expected):
+        result = parse_animal_number(input_val)
+        if np.isnan(expected):
+            assert np.isnan(result)
+        else:
+            assert result == pytest.approx(expected)
 
-# Test 5: Parse ID list with ranges
-try:
-    male_ids, invalid = parse_id_list("1-16, 20")
-    assert len(male_ids) == 17
-    assert len(invalid) == 0
-    log_test(5, "Parse ID list with ranges", "PASS", f"Parsed {len(male_ids)} IDs")
-except Exception as e:
-    log_test(5, "Parse ID list with ranges", "FAIL", str(e))
-
-# Test 6: Parse ID list with overlaps
-try:
-    male_ids, _ = parse_id_list("1-10")
-    female_ids, _ = parse_id_list("8-15")
-    overlap = male_ids.intersection(female_ids)
-    assert len(overlap) == 3  # 8, 9, 10
-    log_test(6, "Detect overlapping ID lists", "PASS", f"Found {len(overlap)} overlaps")
-except Exception as e:
-    log_test(6, "Detect overlapping ID lists", "FAIL", str(e))
-
-# Test 7: T-test for sex differences
-try:
-    t_stat, p_value, n_m, n_f = ttest_for_groups(df_test, 'Weight')
-    assert not pd.isna(t_stat)
-    is_sig = p_value < 0.05
-    log_test(7, "T-test for sex differences (Weight)", "PASS", f"p={p_value:.4f}")
-except Exception as e:
-    log_test(7, "T-test for sex differences", "FAIL", str(e))
-
-# Test 8: Effect size (Cohen's d)
-try:
-    male_weight = df_test[df_test['Sex'] == 'Male']['Weight'].dropna()
-    female_weight = df_test[df_test['Sex'] == 'Female']['Weight'].dropna()
-    cohens_d = effect_size_cohens_d(male_weight, female_weight)
-    log_test(8, "Calculate Cohen's d effect size", "PASS", f"d={cohens_d:.4f}")
-except Exception as e:
-    log_test(8, "Calculate Cohen's d effect size", "FAIL", str(e))
-
-# Test 9: Add log feature
-try:
-    df_log = add_log_feature(df_test.copy(), 'Weight')
-    assert 'Weight_log' in df_log.columns
-    assert df_log['Weight_log'].notna().sum() > 0
-    log_test(9, "Add log-transformed feature", "PASS", "Weight_log created")
-except Exception as e:
-    log_test(9, "Add log-transformed feature", "FAIL", str(e))
-
-# Test 10: Add polynomial features
-try:
-    df_poly = add_polynomial_features(df_test.copy(), 'Weight', degree=3)
-    assert 'Weight_pow2' in df_poly.columns
-    assert 'Weight_pow3' in df_poly.columns
-    log_test(10, "Add polynomial features", "PASS", "Weight_pow2, Weight_pow3 created")
-except Exception as e:
-    log_test(10, "Add polynomial features", "FAIL", str(e))
-
-# Test 11: Add interaction features
-try:
-    df_inter = add_interaction_features(df_test.copy(), 'Weight', 'Length')
-    assert 'Weight_x_Length' in df_inter.columns
-    log_test(11, "Add interaction features", "PASS", "Weight_x_Length created")
-except Exception as e:
-    log_test(11, "Add interaction features", "FAIL", str(e))
-
-# Test 12: Standardize features
-try:
-    df_std = standardize_features(df_test.copy(), ['Weight', 'Length'])
-    assert 'Weight_std' in df_std.columns
-    assert 'Length_std' in df_std.columns
-    w_mean = df_std['Weight_std'].mean()
-    w_std = df_std['Weight_std'].std()
-    assert abs(w_mean) < 0.01  # Should be ~0
-    log_test(12, "Standardize features", "PASS", "Features standardized (μ≈0, σ≈1)")
-except Exception as e:
-    log_test(12, "Standardize features", "FAIL", str(e))
-
-# Test 13: Add missing indicators
-try:
-    df_miss = add_missing_indicators(df_test.copy(), ['Weight', 'Length'])
-    assert 'Weight_missing' in df_miss.columns
-    assert 'Length_missing' in df_miss.columns
-    log_test(13, "Add missing indicators", "PASS", "Missing indicators added")
-except Exception as e:
-    log_test(13, "Add missing indicators", "FAIL", str(e))
-
-# Test 14: Handle missing values in features
-try:
-    df_with_nan = df_test.copy()
-    df_with_nan.loc[5:10, 'Weight'] = np.nan
-    df_clean_nan = basic_clean(df_with_nan.copy())
-    missing_count = df_clean_nan['Weight'].isna().sum()
-    log_test(14, "Handle missing values", "PASS", f"Rows with NaN handled")
-except Exception as e:
-    log_test(14, "Handle missing values", "FAIL", str(e))
-
-# Test 15: Data with low sample size
-try:
-    df_small = df_test.iloc[:5].copy()
-    male_small = df_small[df_small['Sex'] == 'Male']['Weight'].dropna()
-    female_small = df_small[df_small['Sex'] == 'Female']['Weight'].dropna()
-    if len(male_small) > 1 and len(female_small) > 1:
-        t_stat, p_val, _, _ = ttest_for_groups(df_small, 'Weight')
-        log_test(15, "T-test with small sample (n=5)", "PASS", "Handled gracefully")
-    else:
-        log_test(15, "T-test with small sample (n=5)", "PASS", "Insufficient data handled")
-except Exception as e:
-    log_test(15, "T-test with small sample", "FAIL", str(e))
-
-# Test 16: Multiple feature engineering pipeline
-try:
-    df_pipeline = df_test.copy()
-    df_pipeline = add_log_feature(df_pipeline, 'Weight')
-    df_pipeline = add_polynomial_features(df_pipeline, 'Length', degree=2)
-    df_pipeline = add_interaction_features(df_pipeline, 'Weight', 'Length')
-    df_pipeline = standardize_features(df_pipeline, ['Weight', 'Length'])
-    df_pipeline = add_missing_indicators(df_pipeline, ['Weight', 'Length'])
-    expected_cols = ['Weight_log', 'Length_pow2', 'Weight_x_Length', 'Weight_std', 'Length_std', 'Weight_missing', 'Length_missing']
-    assert all(col in df_pipeline.columns for col in expected_cols)
-    log_test(16, "Full feature engineering pipeline", "PASS", f"Created 7 new features")
-except Exception as e:
-    log_test(16, "Full feature engineering pipeline", "FAIL", str(e))
-
-# Test 17: Linear regression compatibility
-try:
-    from sklearn.linear_model import LinearRegression
-    from sklearn.model_selection import train_test_split
-    
-    X = df_test[['Weight', 'Length']].dropna()
-    y = df_test.loc[X.index, 'Velocity'].dropna()
-    X = X.loc[y.index]
-    
-    if len(X) > 5:
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        model = LinearRegression()
-        model.fit(X_train, y_train)
-        r2 = model.score(X_test, y_test)
-        log_test(17, "Linear regression with sklearn", "PASS", f"R²={r2:.4f}")
-    else:
-        log_test(17, "Linear regression with sklearn", "PASS", "Dataset too small")
-except Exception as e:
-    log_test(17, "Linear regression with sklearn", "FAIL", str(e))
-
-# Test 18: Polynomial regression
-try:
-    from sklearn.linear_model import LinearRegression
-    from sklearn.model_selection import train_test_split
-    
-    X = df_test[['Weight']].copy()
-    X['Weight_pow2'] = X['Weight'] ** 2
-    y = df_test['Velocity']
-    
-    X_clean = X.dropna()
-    y_clean = y.loc[X_clean.index].dropna()
-    X_clean = X_clean.loc[y_clean.index]
-    
-    if len(X_clean) > 5:
-        X_train, X_test, y_train, y_test = train_test_split(X_clean, y_clean, test_size=0.2, random_state=42)
-        model = LinearRegression()
-        model.fit(X_train, y_train)
-        r2 = model.score(X_test, y_test)
-        log_test(18, "Polynomial regression (degree 2)", "PASS", f"R²={r2:.4f}")
-    else:
-        log_test(18, "Polynomial regression", "PASS", "Dataset too small")
-except Exception as e:
-    log_test(18, "Polynomial regression", "FAIL", str(e))
-
-# Test 19: Sex classification modes comparison
-try:
-    # Threshold mode
-    threshold_sex = np.where(animal_nums <= 16, 'Male', 'Female')
-    
-    # Manual list mode
-    sex_manual = np.where(
-        animal_nums.isin([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]),
-        'Male', 'Female'
-    )
-    
-    # Both should match
-    match_count = (threshold_sex == sex_manual).sum()
-    log_test(19, "Sex classification mode equivalence", "PASS", f"{match_count}/50 match")
-except Exception as e:
-    log_test(19, "Sex classification mode equivalence", "FAIL", str(e))
-
-# Test 20: Residual analysis for regression
-try:
-    from sklearn.linear_model import LinearRegression
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import mean_absolute_error, mean_squared_error
-    
-    X = df_test[['Weight', 'Length']].dropna()
-    y = df_test.loc[X.index, 'Velocity'].dropna()
-    X = X.loc[y.index]
-    
-    if len(X) > 10:
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        model = LinearRegression()
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
-        residuals = y_test - y_pred
-        
-        mae = mean_absolute_error(y_test, y_pred)
-        rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-        
-        log_test(20, "Residual analysis", "PASS", f"MAE={mae:.4f}, RMSE={rmse:.4f}")
-    else:
-        log_test(20, "Residual analysis", "PASS", "Dataset too small")
-except Exception as e:
-    log_test(20, "Residual analysis", "FAIL", str(e))
+    def test_parse_animal_number_series(self, synthetic_df):
+        nums = parse_animal_number_series(synthetic_df["Animal_ID"])
+        assert nums.notna().sum() == 50
+        assert nums.iloc[0] == 1.0
 
 
-# ============================================================================
-# SUMMARY
-# ============================================================================
-print("\n" + "=" * 80)
-print("TEST SUMMARY")
-print("=" * 80)
+# ---------------------------------------------------------------------------
+# ID list parsing
+# ---------------------------------------------------------------------------
 
-df_results = pd.DataFrame(test_results)
-pass_count = (df_results['Status'] == 'PASS').sum()
-fail_count = (df_results['Status'] == 'FAIL').sum()
-warn_count = (df_results['Status'] == 'WARN').sum()
+class TestIDListParsing:
+    def test_parse_id_list_basic_range(self):
+        ids, invalid = parse_id_list("1-16, 20")
+        assert len(ids) == 17
+        assert 1.0 in ids
+        assert 16.0 in ids
+        assert 20.0 in ids
+        assert len(invalid) == 0
 
-print(f"\nTotal Tests: {len(df_results)}")
-print(f"Passed: {pass_count} ✓")
-print(f"Failed: {fail_count} ✗")
-print(f"Warnings: {warn_count} ⚠")
+    def test_parse_id_list_overlap_detection(self):
+        male_ids, _ = parse_id_list("1-10")
+        female_ids, _ = parse_id_list("8-15")
+        overlap = male_ids.intersection(female_ids)
+        assert overlap == {8.0, 9.0, 10.0}
 
-if fail_count == 0:
-    print("\n🎉 ALL TESTS PASSED!")
-else:
-    print(f"\n⚠  {fail_count} test(s) failed:")
-    for _, row in df_results[df_results['Status'] == 'FAIL'].iterrows():
-        print(f"  - Test {row['Test']}: {row['Name']} - {row['Details']}")
+    def test_parse_id_list_invalid_tokens(self):
+        ids, invalid = parse_id_list("1-10, abc, 20-xyz")
+        assert "abc" in invalid
+        assert "20-xyz" in invalid
+        assert 1.0 in ids
 
-print("\n" + "=" * 80)
+    def test_parse_id_list_reversed_range(self):
+        ids, invalid = parse_id_list("10-5")
+        assert len(ids) == 6
+        assert 5.0 in ids
+        assert 10.0 in ids
+
+
+# ---------------------------------------------------------------------------
+# Sex classification
+# ---------------------------------------------------------------------------
+
+class TestSexClassification:
+    def test_threshold_classification(self, synthetic_df):
+        nums = parse_animal_number_series(synthetic_df["Animal_ID"])
+        sex = np.where(
+            nums <= 16, "Male", np.where(nums > 16, "Female", "Unclassified")
+        )
+        assert (sex == "Male").sum() == 16
+        assert (sex == "Female").sum() == 34
+
+    def test_manual_list_classification(self, synthetic_df):
+        nums = parse_animal_number_series(synthetic_df["Animal_ID"])
+        male_ids, _ = parse_id_list("1-16")
+        female_ids, _ = parse_id_list("17-50")
+        sex = np.select(
+            [nums.isin(male_ids), nums.isin(female_ids)],
+            ["Male", "Female"],
+            default="Unclassified",
+        )
+        assert (sex == "Male").sum() == 16
+        assert (sex == "Female").sum() == 34
+
+    def test_classification_mode_equivalence(self, synthetic_df):
+        nums = parse_animal_number_series(synthetic_df["Animal_ID"])
+        threshold_sex = np.where(nums <= 16, "Male", "Female")
+        manual_ids, _ = parse_id_list("1-16")
+        manual_sex = np.where(nums.isin(manual_ids), "Male", "Female")
+        assert (threshold_sex == manual_sex).all()
+
+    def test_unclassified_for_non_numeric(self):
+        df = pd.DataFrame({"Animal_ID": ["rat", "subject", "42"]})
+        nums = parse_animal_number_series(df["Animal_ID"])
+        assert nums.isna().sum() == 2
+
+
+# ---------------------------------------------------------------------------
+# Statistical tests
+# ---------------------------------------------------------------------------
+
+class TestStatistics:
+    def test_ttest_returns_valid_numbers(self, classified_df):
+        t_stat, p_value, n_m, n_f = ttest_for_groups(classified_df, "Weight")
+        assert not np.isnan(t_stat)
+        assert not np.isnan(p_value)
+        assert n_m == 16
+        assert n_f == 34
+
+    def test_ttest_small_sample_returns_nan(self):
+        df = pd.DataFrame({
+            "Sex": ["Male", "Male", "Female"],
+            "Val": [1.0, 2.0, 3.0],
+        })
+        t_stat, p_value, n_m, n_f = ttest_for_groups(df, "Val")
+        assert np.isnan(t_stat)
+        assert np.isnan(p_value)
+
+    def test_cohens_d_reasonable_range(self, classified_df):
+        male_w = classified_df[classified_df["Sex"] == "Male"]["Weight"].dropna()
+        female_w = classified_df[classified_df["Sex"] == "Female"]["Weight"].dropna()
+        d = effect_size_cohens_d(male_w, female_w)
+        assert not np.isnan(d)
+        assert abs(d) < 5  # Sanity bound for random data
+
+    def test_cohens_d_insufficient_data(self):
+        g1 = pd.Series([1.0])
+        g2 = pd.Series([2.0, 3.0])
+        d = effect_size_cohens_d(g1, g2)
+        assert np.isnan(d)
+
+    def test_cohens_d_zero_variance(self):
+        g1 = pd.Series([5.0, 5.0, 5.0])
+        g2 = pd.Series([3.0, 4.0, 5.0])
+        d = effect_size_cohens_d(g1, g2)
+        assert np.isnan(d)
+
+
+# ---------------------------------------------------------------------------
+# Feature engineering
+# ---------------------------------------------------------------------------
+
+class TestFeatureEngineering:
+    def test_add_log_feature(self, synthetic_df):
+        df = add_log_feature(synthetic_df.copy(), "Weight")
+        assert "Weight_log" in df.columns
+        assert df["Weight_log"].notna().sum() > 0
+
+    def test_add_polynomial_features(self, synthetic_df):
+        df = add_polynomial_features(synthetic_df.copy(), "Weight", degree=3)
+        assert "Weight_pow2" in df.columns
+        assert "Weight_pow3" in df.columns
+
+    def test_add_interaction_features(self, synthetic_df):
+        df = add_interaction_features(synthetic_df.copy(), "Weight", "Length")
+        assert "Weight_x_Length" in df.columns
+
+    def test_standardize_features(self, synthetic_df):
+        df = standardize_features(synthetic_df.copy(), ["Weight", "Length"])
+        assert "Weight_std" in df.columns
+        assert "Length_std" in df.columns
+        assert abs(df["Weight_std"].mean()) < 0.01
+        assert abs(df["Weight_std"].std() - 1.0) < 0.01
+
+    def test_standardize_zero_variance(self):
+        df = pd.DataFrame({"A": [5.0, 5.0, 5.0], "B": [1.0, 2.0, 3.0]})
+        df_std = standardize_features(df.copy(), ["A", "B"])
+        assert (df_std["A_std"] == 0).all()
+        assert df_std["B_std"].std() == pytest.approx(1.0, abs=0.01)
+
+    def test_add_missing_indicators(self, synthetic_df):
+        df = synthetic_df.copy()
+        df.loc[0:2, "Weight"] = np.nan
+        df = add_missing_indicators(df, ["Weight", "Length"])
+        assert "Weight_missing" in df.columns
+        assert "Length_missing" in df.columns
+        assert df.loc[0, "Weight_missing"] == 1
+        assert df.loc[0, "Length_missing"] == 0
+
+    def test_full_feature_pipeline(self, synthetic_df):
+        df = synthetic_df.copy()
+        df = add_log_feature(df, "Weight")
+        df = add_polynomial_features(df, "Length", degree=2)
+        df = add_interaction_features(df, "Weight", "Length")
+        df = standardize_features(df, ["Weight", "Length"])
+        df = add_missing_indicators(df, ["Weight", "Length"])
+        expected = [
+            "Weight_log",
+            "Length_pow2",
+            "Weight_x_Length",
+            "Weight_std",
+            "Length_std",
+            "Weight_missing",
+            "Length_missing",
+        ]
+        for col in expected:
+            assert col in df.columns
+
+
+# ---------------------------------------------------------------------------
+# Regression / sklearn integration
+# ---------------------------------------------------------------------------
+
+class TestRegression:
+    def test_linear_regression_runs(self, classified_df):
+        from sklearn.linear_model import LinearRegression
+        from sklearn.model_selection import train_test_split
+
+        X = classified_df[["Weight", "Length"]].dropna()
+        y = classified_df.loc[X.index, "Velocity"].dropna()
+        X = X.loc[y.index]
+
+        if len(X) > 5:
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42
+            )
+            model = LinearRegression()
+            model.fit(X_train, y_train)
+            r2 = model.score(X_test, y_test)
+            assert isinstance(r2, (float, np.floating))
+
+    def test_polynomial_regression_runs(self, classified_df):
+        from sklearn.linear_model import LinearRegression
+        from sklearn.model_selection import train_test_split
+
+        X = classified_df[["Weight"]].copy()
+        X["Weight_pow2"] = X["Weight"] ** 2
+        y = classified_df["Velocity"]
+        X_clean = X.dropna()
+        y_clean = y.loc[X_clean.index].dropna()
+        X_clean = X_clean.loc[y_clean.index]
+
+        if len(X_clean) > 5:
+            X_train, X_test, y_train, y_test = train_test_split(
+                X_clean, y_clean, test_size=0.2, random_state=42
+            )
+            model = LinearRegression()
+            model.fit(X_train, y_train)
+            r2 = model.score(X_test, y_test)
+            assert isinstance(r2, (float, np.floating))
+
+    def test_residual_analysis(self, classified_df):
+        from sklearn.linear_model import LinearRegression
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import mean_absolute_error, mean_squared_error
+
+        X = classified_df[["Weight", "Length"]].dropna()
+        y = classified_df.loc[X.index, "Velocity"].dropna()
+        X = X.loc[y.index]
+
+        if len(X) > 10:
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42
+            )
+            model = LinearRegression()
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            residuals = y_test - y_pred
+
+            mae = mean_absolute_error(y_test, y_pred)
+            rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+            assert mae >= 0
+            assert rmse >= 0
+            assert len(residuals) == len(y_test)
+
+
+# ---------------------------------------------------------------------------
+# Visualization
+# ---------------------------------------------------------------------------
+
+class TestVisualization:
+    def test_boxplot_by_category(self, classified_df):
+        fig = boxplot_by_category(classified_df, "Weight", "Sex")
+        assert fig is not None
+
+
+# ---------------------------------------------------------------------------
+# End-to-end integration
+# ---------------------------------------------------------------------------
+
+class TestIntegration:
+    def test_full_pipeline_no_errors(self, synthetic_df):
+        """Simulate the core pipeline: load -> clean -> classify -> features -> stats."""
+        df = basic_clean(synthetic_df.copy())
+        nums = parse_animal_number_series(df["Animal_ID"])
+        df["Sex"] = np.where(nums <= 16, "Male", "Female")
+        df = add_log_feature(df, "Weight")
+        df = standardize_features(df, ["Weight", "Length"])
+        t_stat, p_value, n_m, n_f = ttest_for_groups(df, "Weight")
+        assert not np.isnan(t_stat)
+        assert n_m + n_f == len(df)
