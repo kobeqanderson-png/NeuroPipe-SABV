@@ -171,11 +171,15 @@ st.markdown(
     }
 
     .workflow-step {
-        background: linear-gradient(180deg, #121a2f 0%, #0e1528 100%);
-        border: 1px solid var(--line-soft);
+        background: rgba(18, 26, 47, 0.7);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
         padding: 0.7rem 0.55rem;
         text-align: center;
         min-height: 84px;
+        border-radius: 6px;
     }
 
     .workflow-step b {
@@ -192,10 +196,21 @@ st.markdown(
     }
 
     .feature-card {
-        background: linear-gradient(180deg, #101526 0%, #0d1222 100%);
-        border: 1px solid var(--line-soft);
-        padding: 1rem;
+        background: rgba(16, 21, 38, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        padding: 1.2rem;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
         animation: fadeIn 0.5s ease-out;
+        transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255, 106, 95, 0.3);
     }
 
     .feature-card h4 {
@@ -443,6 +458,29 @@ st.markdown(
 st.caption("NeuroPipe-SABV | Built with Streamlit | Dark Brainlife-inspired theme")
 
 st.divider()
+st.divider()
+
+st.markdown(
+    """
+    <section class="section-band">
+        <h3>How to Cite</h3>
+        <p style="margin-bottom: 0.8rem; color: #b8c3db;">If you use NeuroPipe-SABV in your research, please cite our software:</p>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.code("Anderson, K. Q., & Devan, B. (2026). NeuroPipe-SABV: An NIH SABV-Compliant Data Processing Pipeline for Preclinical Behavioral Neuroscience. Journal of Open Source Software. https://github.com/kobeqanderson-png/NeuroPipe-SABV", language="text")
+
+st.markdown("**BibTeX:**")
+st.code("""@software{Anderson2026,
+  author = {Anderson, Kobe Q. and Devan, Bryan},
+  title = {NeuroPipe-SABV: An NIH SABV-Compliant Data Processing Pipeline for Preclinical Behavioral Neuroscience},
+  year = {2026},
+  publisher = {Journal of Open Source Software},
+  url = {https://github.com/kobeqanderson-png/NeuroPipe-SABV}
+}""", language="bibtex")
+
 st.divider()
 st.caption("Navigate through pages using the top menu • Your data persists across pages")
 

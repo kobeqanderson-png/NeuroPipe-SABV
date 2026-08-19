@@ -4,6 +4,7 @@ Page 1: Upload and Explore Raw Data
 
 import streamlit as st
 import pandas as pd
+import numpy as np
 from pathlib import Path
 import sys
 
@@ -34,6 +35,37 @@ uploaded_file = st.file_uploader(
     type=["csv", "xlsx", "xls"],
     help="Drag and drop or click to upload"
 )
+
+st.markdown("<div style='text-align: center; margin: 1rem 0; color: #9ca7bf;'>— OR —</div>", unsafe_allow_html=True)
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    if st.button("✨ Load Demo Data (Open Field Test)", use_container_width=True, help="Instantly load a realistic mock dataset to test the pipeline."):
+        np.random.seed(42)
+        n_subjects = 30
+        
+        ids = np.arange(1, n_subjects + 1)
+        
+        # Simulate data with sex differences (IDs 1-15 Male, 16-30 Female)
+        distance = np.where(ids <= 15, np.random.normal(3000, 500, n_subjects), np.random.normal(2500, 400, n_subjects))
+        velocity = distance / 300 
+        center_time = np.where(ids <= 15, np.random.normal(15, 5, n_subjects), np.random.normal(25, 6, n_subjects))
+        
+        # Introduce missing values and outliers for cleaning demo
+        distance[2] = np.nan
+        distance[28] = 9500.0  # Outlier
+        velocity[10] = np.nan
+        
+        df_demo = pd.DataFrame({
+            'Subject_ID': [f"rat_{i}" for i in ids],
+            'Distance_Moved_cm': distance,
+            'Velocity_cm_s': velocity,
+            'Center_Time_s': center_time,
+            'Test_Date': ['2026-08-01'] * n_subjects
+        })
+        
+        st.session_state.df_raw = df_demo
+        st.session_state.uploaded_filename = "demo_open_field_data.csv"
+        st.rerun()
 
 if uploaded_file is not None:
     try:

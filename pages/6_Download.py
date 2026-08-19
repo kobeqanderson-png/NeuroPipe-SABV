@@ -315,6 +315,24 @@ with col2:
 
 st.divider()
 
+st.header("Methods Section Generator")
+st.markdown("Copy and paste this dynamically generated text directly into the methods section of your manuscript.")
+
+sex_col_used = st.session_state.get('sex_col_used', 'the identifier')
+threshold_used = st.session_state.get('sex_threshold_used', 16)
+is_threshold = st.session_state.get('sex_rebuild_from_threshold', True)
+
+if is_threshold:
+    class_desc = f"a threshold split (males assigned to IDs <= {threshold_used}, females > {threshold_used})"
+else:
+    class_desc = "manual list assignment"
+
+methods_text = f"Data were imported and processed using the NeuroPipe-SABV application (Anderson & Devan, 2026). Subjects were classified by sex based on numerical identifiers extracted from '{sex_col_used}' using {class_desc}. Missing values were handled via complete case analysis during group comparisons. Statistical differences between male and female cohorts were assessed using Welch's independent samples t-tests (assuming unequal variances), with significance evaluated at α = 0.05. Visualizations and statistical summaries were exported directly from the pipeline to ensure reproducibility and compliance with NIH guidelines for reporting Sex as a Biological Variable (SABV)."
+
+st.code(methods_text, language="markdown")
+
+st.divider()
+
 st.subheader("Data Summary")
 
 col1, col2, col3 = st.columns(3)
