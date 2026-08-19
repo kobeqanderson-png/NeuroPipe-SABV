@@ -160,7 +160,7 @@ if st.button("Run Processing Pipeline", type="primary", use_container_width=True
     with st.spinner("Processing data..."):
         try:
             # 1. Apply basic cleaning
-            df_processed = basic_clean(df_raw)
+            df_processed, clean_report = basic_clean(df_raw)
             
             # 2. Apply sex classification
             sex_numeric = parse_animal_number_series(df_processed[sex_col])
