@@ -1,6 +1,6 @@
 # Test Results Report
 
-**Project**: NIH SABV Compliant Pipeline  
+**Project**: NeuroPipe-SABV  
 **Test Date**: April 1, 2026  
 **Total Tests**: 35 (20 Unit + 15 Stress)  
 **Pass Rate**: 100% ✅
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-The NIH SABV Compliant Pipeline has been thoroughly tested across 35 distinct scenarios covering:
+NeuroPipe-SABV has been thoroughly tested across 35 distinct scenarios covering:
 - Core functionality (data loading, processing, classification)
 - Statistical analysis (t-tests, effect sizes)
 - Feature engineering (5 transformation methods)
@@ -240,7 +240,7 @@ Dataset Size | Predicted Time | Status
 
 ## Conclusion
 
-The NIH SABV Compliant Pipeline has demonstrated:
+NeuroPipe-SABV has demonstrated:
 
 ✅ **Correctness**: All 35 tests pass with expected outputs  
 ✅ **Performance**: <30ms for 10K-row processing  

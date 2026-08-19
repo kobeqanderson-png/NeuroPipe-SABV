@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stress tests for NIH SABV pipeline with large datasets and edge cases."""
+"""Stress tests for NeuroPipe-SABV with large datasets and edge cases."""
 
 import sys
 import pandas as pd

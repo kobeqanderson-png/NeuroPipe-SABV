@@ -160,7 +160,7 @@ def apply_global_chrome() -> None:
 
 def render_top_navigation(current_page: str) -> None:
     """Render a horizontal top navigation bar for all app pages."""
-    st.markdown("<div class='top-nav-wrap'><div class='top-nav-title'>Pipeline Navigation</div>", unsafe_allow_html=True)
+    st.markdown("<div class='top-nav-wrap'><div class='top-nav-title'>NeuroPipe-SABV</div>", unsafe_allow_html=True)
 
     cols = st.columns(len(NAV_ITEMS))
     for col, (key, path, label) in zip(cols, NAV_ITEMS):

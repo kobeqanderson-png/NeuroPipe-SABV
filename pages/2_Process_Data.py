@@ -17,7 +17,7 @@ from src.cleaning import basic_clean
 from src.features import add_log_feature
 from src.navigation import apply_global_chrome, render_top_navigation
 
-st.set_page_config(page_title="Process Data", page_icon=None, layout="wide")
+st.set_page_config(page_title="NeuroPipe-SABV | Process Data", page_icon=None, layout="wide")
 
 apply_global_chrome()
 render_top_navigation("Process")

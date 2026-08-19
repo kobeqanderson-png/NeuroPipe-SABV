@@ -1,4 +1,4 @@
-# Contributing to NIH SABV Data Pipeline
+# Contributing to NeuroPipe-SABV
 
 Thank you for your interest in improving this project. This document covers how to report issues, propose changes, and run the test suite.
 

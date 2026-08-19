@@ -1,4 +1,4 @@
-# Documentation Index - NIH SABV Compliant Pipeline
+# Documentation Index — NeuroPipe-SABV
 
 **Project Status**: ✅ PRODUCTION READY  
 **Date**: April 1, 2026  

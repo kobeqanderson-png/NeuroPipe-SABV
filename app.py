@@ -1,5 +1,5 @@
 """
-NIH SABV Compliant Data Processing Pipeline - Home Page
+NeuroPipe-SABV — Home Page
 
 Multi-page app entry point. Navigate to different sections through the sidebar.
 Run with: streamlit run app.py
@@ -19,7 +19,7 @@ from src.animations import (
 from src.navigation import apply_global_chrome, render_top_navigation
 
 st.set_page_config(
-    page_title="NIH SABV Compliant Pipeline",
+    page_title="NeuroPipe-SABV",
     page_icon=None,
     layout="wide"
 )
@@ -363,11 +363,11 @@ st.markdown(
     """
     <section class="section-band">
         <p style="margin-bottom: 0.7rem; color: #c8d1e6; font-size: 0.95rem;">
-            <strong>NIH</strong> = National Institue of Health • <strong>SABV</strong> = Sex as a Biological Variable
+            <strong>NIH</strong> = National Institutes of Health • <strong>SABV</strong> = Sex as a Biological Variable
         </p>
         <div class="hero-shell">
             <span class="hero-tag">Research Workflow Platform</span>
-            <h1 class="hero-title">NIH SABV Compliant Data Pipeline</h1>
+            <h1 class="hero-title">NeuroPipe-SABV</h1>
             <p class="hero-copy">
                 A full lifecycle environment for upload, curation, classification, statistical comparison,
                 visualization, and model building, organized as a guided workflow.
@@ -440,7 +440,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.caption("Built with Streamlit | Data Processing Pipeline v2.0 | Dark Brainlife-inspired theme")
+st.caption("NeuroPipe-SABV | Built with Streamlit | Dark Brainlife-inspired theme")
 
 st.divider()
 st.divider()

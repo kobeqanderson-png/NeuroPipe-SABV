@@ -1,6 +1,6 @@
 # Architecture & Implementation Guide
 
-**Project**: NIH SABV Compliant Pipeline  
+**Project**: NeuroPipe-SABV  
 **Version**: 1.0  
 **Last Updated**: April 1, 2026
 

@@ -21,7 +21,7 @@ from src.animations import (
 )
 from src.navigation import apply_global_chrome, render_top_navigation
 
-st.set_page_config(page_title="Upload Data", page_icon=None, layout="wide")
+st.set_page_config(page_title="NeuroPipe-SABV | Upload Data", page_icon=None, layout="wide")
 
 # Inject animations
 inject_animation_css()

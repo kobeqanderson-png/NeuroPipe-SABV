@@ -1,8 +1,8 @@
-# NIH SABV Compliant Pipeline - Project Documentation
+# NeuroPipe-SABV — Project Documentation
 
 ## Overview
 
-The **NIH SABV Compliant Pipeline** is a production-ready Streamlit web application for analyzing sex differences in research data.
+The **NeuroPipe-SABV** pipeline is a production-ready Streamlit web application for analyzing sex differences in research data.
 
 **Status**: ✅ Production Ready (All 35 tests passed)
 

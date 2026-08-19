@@ -21,7 +21,7 @@ except ModuleNotFoundError:
         return None
 from src.navigation import apply_global_chrome, render_top_navigation
 
-st.set_page_config(page_title="Visualizations", page_icon=None, layout="wide")
+st.set_page_config(page_title="NeuroPipe-SABV | Visualizations", page_icon=None, layout="wide")
 
 apply_global_chrome()
 render_top_navigation("Visualize")

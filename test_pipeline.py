@@ -1,4 +1,4 @@
-"""Pytest suite for NIH SABV data processing pipeline.
+"""Pytest suite for NeuroPipe-SABV data processing pipeline.
 
 Run with:
     pytest test_pipeline.py -v
