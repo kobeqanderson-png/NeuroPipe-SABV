@@ -162,8 +162,14 @@ if st.button("Run Processing Pipeline", type="primary", use_container_width=True
             # 1. Apply basic cleaning
             df_processed, clean_report = basic_clean(df_raw)
             
+            # Resolve the actual column name after cleaning/standardization
+            actual_sex_col = sex_col.strip() if isinstance(sex_col, str) else sex_col
+            renamed_map = clean_report.get("header_standardization", {}).get("renamed", {})
+            if isinstance(renamed_map, dict):
+                actual_sex_col = renamed_map.get(actual_sex_col, actual_sex_col)
+            
             # 2. Apply sex classification
-            sex_numeric = parse_animal_number_series(df_processed[sex_col])
+            sex_numeric = parse_animal_number_series(df_processed[actual_sex_col])
             if classification_mode == "Threshold split":
                 df_processed['Sex'] = np.where(
                     sex_numeric <= threshold,
@@ -211,10 +217,10 @@ if st.button("Run Processing Pipeline", type="primary", use_container_width=True
             unclassified_count = int((df_processed['Sex'] == 'Unclassified').sum())
             if unclassified_count > 0:
                 st.warning(
-                    f"{unclassified_count} row(s) could not be classified because no numeric animal ID was found in '{sex_col}'."
+                    f"{unclassified_count} row(s) could not be classified because no numeric animal ID was found in '{actual_sex_col}'."
                 )
             
-            st.session_state.sex_col_used = sex_col
+            st.session_state.sex_col_used = actual_sex_col
             st.session_state.sex_threshold_used = float(threshold)
             st.session_state.sex_rebuild_from_threshold = classification_mode == "Threshold split"
             
