@@ -63,12 +63,11 @@ def apply_global_chrome() -> None:
         }
 
         section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #0b1020 0%, #090d18 100%) !important;
-            border-right: 1px solid var(--line-soft);
+            display: none !important;
         }
 
         [data-testid="stSidebarCollapsedControl"] {
-            top: 0.7rem;
+            display: none !important;
         }
 
         .stMarkdown, .stText, .stCaption, label, p, h1, h2, h3, h4 {
