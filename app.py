@@ -366,11 +366,11 @@ st.markdown(
             <strong>NIH</strong> = National Institutes of Health • <strong>SABV</strong> = Sex as a Biological Variable
         </p>
         <div class="hero-shell">
-            <span class="hero-tag">Research Workflow Platform</span>
+            <span class="hero-tag">NeuroPipe-SABV • Research Workflow Platform</span>
             <h1 class="hero-title">NeuroPipe-SABV</h1>
             <p class="hero-copy">
-                A full lifecycle environment for upload, curation, classification, statistical comparison,
-                visualization, and model building, organized as a guided workflow.
+                An NIH SABV-compliant pipeline for preclinical behavioral neuroscience.
+                Upload, curate, classify, compare, visualize, and model — in a single guided workflow.
             </p>
             <div class="hero-kpis">
                 <div class="hero-kpi"><b>7-step</b><span>guided analysis path</span></div>
@@ -451,7 +451,7 @@ st.markdown(
     <section class="section-band" style="margin-top: 1.2rem; padding-bottom: 0.2rem;">
         <div class="feature-card" style="max-width: 720px; margin: 0 auto; text-align: center;">
             <h3 style="margin-bottom: 0.5rem;">Contact</h3>
-            <p style="margin-bottom: 0.35rem; color: #b8c3db;">Questions about the pipeline, workflow, or exports?</p>
+            <p style="margin-bottom: 0.35rem; color: #b8c3db;">Questions about NeuroPipe-SABV, the workflow, or exports?</p>
             <p style="margin-bottom: 0; color: #dce5ff; font-weight: 600;">
                 Email <a href="mailto:kobescodes@gmail.com">kobescodes@gmail.com</a>
             </p>

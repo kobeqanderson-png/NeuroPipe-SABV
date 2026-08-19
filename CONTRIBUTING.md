@@ -13,8 +13,8 @@ If you find a bug or have a feature request, please open an issue on GitHub and 
 ## Development Setup
 
 ```bash
-git clone https://github.com/kobeqanderson-png/nihdatapipeline.git
-cd nihdatapipeline
+git clone https://github.com/kobeqanderson-png/NeuroPipe-SABV.git
+cd NeuroPipe-SABV
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt

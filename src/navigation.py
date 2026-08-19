@@ -111,11 +111,41 @@ def apply_global_chrome() -> None:
             justify-content: center;
         }
 
+
         .top-nav-wrap {
             background: linear-gradient(180deg, rgba(18, 24, 39, 0.9) 0%, rgba(12, 16, 27, 0.9) 100%);
             border: 1px solid var(--line);
             padding: 0.8rem;
             margin-bottom: 1.1rem;
+        }
+
+        .top-nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 0.6rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 106, 95, 0.18);
+        }
+
+        .top-nav-brand-mark {
+            font-family: "Sora", "Manrope", sans-serif;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ff857b 0%, #ff6a5f 50%, #ffb0a9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .top-nav-brand-tag {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            letter-spacing: 0.06em;
+            padding: 0.15rem 0.5rem;
+            border: 1px solid rgba(255, 106, 95, 0.22);
+            background: rgba(255, 106, 95, 0.06);
         }
 
         .top-nav-title {
@@ -149,6 +179,10 @@ def apply_global_chrome() -> None:
                 font-size: 9px;
                 letter-spacing: 0.12em;
             }
+
+            .top-nav-brand-mark {
+                font-size: 1.1rem;
+            }
         }
         </style>
         """,
@@ -159,8 +193,17 @@ def apply_global_chrome() -> None:
 
 
 def render_top_navigation(current_page: str) -> None:
-    """Render a horizontal top navigation bar for all app pages."""
-    st.markdown("<div class='top-nav-wrap'><div class='top-nav-title'>NeuroPipe-SABV</div>", unsafe_allow_html=True)
+    """Render a horizontal top navigation bar with NeuroPipe-SABV branding."""
+    st.markdown(
+        """
+        <div class='top-nav-wrap'>
+            <div class='top-nav-brand'>
+                <span class='top-nav-brand-mark'>NeuroPipe-SABV</span>
+                <span class='top-nav-brand-tag'>NIH SABV-Compliant Pipeline</span>
+            </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     cols = st.columns(len(NAV_ITEMS))
     for col, (key, path, label) in zip(cols, NAV_ITEMS):
@@ -171,3 +214,4 @@ def render_top_navigation(current_page: str) -> None:
                 st.page_link(path, label=label)
 
     st.markdown("</div>", unsafe_allow_html=True)
+
