@@ -1,0 +1,42 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "name": "NeuroPipe-SABV",
+  "description": "A Streamlit web application that automates the analysis of preclinical behavioral neuroscience data in compliance with the NIH Sex as a Biological Variable (SABV) policy.\n",
+  "author": [
+    {
+      "givenName": "Kobe",
+      "familyName": "Anderson",
+      "type": "Person",
+      "id": "0009-0006-5464-1323",
+      "affiliation": {
+        "type": "Organization",
+        "name": "Towson University"
+      }
+    },
+    {
+      "givenName": "Bryan",
+      "familyName": "Devan",
+      "type": "Person",
+      "id": "0000-0002-6445-8550",
+      "affiliation": {
+        "type": "Organization",
+        "name": "Towson University"
+      }
+    }
+  ],
+  "license": [
+    "https://spdx.org/licenses/MIT"
+  ],
+  "version": "1.0.1",
+  "dateModified": "2026-04-01",
+  "codeRepository": "https://github.com/kobeqanderson-png/NeuroPipe-SABV",
+  "downloadUrl": "https://github.com/kobeqanderson-png/NeuroPipe-SABV/releases/tag/v1.0.1",
+  "relatedLink": [
+    "v1.0.1"
+  ],
+  "softwareHelp": [
+    "kobe.q.anderson@gmail.com"
+  ],
+  "identifier": "10.5281/zenodo.22004105"
+}
