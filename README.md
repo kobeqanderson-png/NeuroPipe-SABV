@@ -6,7 +6,7 @@ I built NeuroPipe-SABV to explore a question from behavioral research: how can s
 
 The project brings data preparation, sex-based grouping, visualization, and statistical exploration into a Streamlit workflow. I want researchers to be able to try it, inspect its assumptions, and challenge the parts that need work. A polished figure is not evidence that the analysis behind it is appropriate.
 
-[Open the beta app](https://data-analysis-sabv.streamlit.app/) · [Review priorities and limitations](BETA_REVIEW.md) · [Report a problem](https://github.com/kobeqanderson-png/NeuroPipe-SABV/issues/new/choose)
+[Open the Streamlit Cloud beta](https://data-analysis-sabv.streamlit.app/) · [Production deployment notes](DEPLOYMENT.md) · [Review priorities and limitations](BETA_REVIEW.md) · [Report a problem](https://github.com/kobeqanderson-png/NeuroPipe-SABV/issues/new/choose)
 
 ![Existing NeuroPipe-SABV interface screenshot](screenshot.png)
 
@@ -31,6 +31,10 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 python -m streamlit run app.py
 ```
+
+## Production hosting
+
+Streamlit Community Cloud is convenient for demos, but inactive apps can hibernate. For a more reliable public endpoint, this repo now includes Docker and Render Blueprint configuration. See [DEPLOYMENT.md](DEPLOYMENT.md) for the always-on deployment path.
 
 Use a synthetic or non-sensitive example first. Before interpreting outputs:
 
