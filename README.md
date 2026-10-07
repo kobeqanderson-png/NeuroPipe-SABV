@@ -6,7 +6,7 @@ I built NeuroPipe-SABV to explore a question from behavioral research: how can s
 
 The project brings data preparation, sex-based grouping, visualization, and statistical exploration into a Panel workflow. I want researchers to be able to try it, inspect its assumptions, and challenge the parts that need work. A polished figure is not evidence that the analysis behind it is appropriate.
 
-[Open the Streamlit Cloud beta](https://data-analysis-sabv.streamlit.app/) · [Production deployment notes](DEPLOYMENT.md) · [Review priorities and limitations](BETA_REVIEW.md) · [Report a problem](https://github.com/kobeqanderson-png/NeuroPipe-SABV/issues/new/choose)
+[Open the Streamlit Cloud beta](https://neuropipesabv.streamlit.app/) · [Production deployment notes](DEPLOYMENT.md) · [Review priorities and limitations](BETA_REVIEW.md) · [Report a problem](https://github.com/kobeqanderson-png/NeuroPipe-SABV/issues/new/choose)
 
 ![Existing NeuroPipe-SABV interface screenshot](screenshot.png)
 
