@@ -19,10 +19,9 @@ RUN python -m pip install --upgrade pip \
 
 COPY . .
 
-EXPOSE 8501
+EXPOSE 5006
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD curl --fail http://localhost:${PORT:-8501}/_stcore/health || exit 1
+    CMD curl --fail http://localhost:${PORT:-5006}/ || exit 1
 
-CMD ["sh", "-c", "streamlit run app.py --server.address=0.0.0.0 --server.port=${PORT:-8501}"]
-
+CMD ["sh", "-c", "panel serve panel_app.py --address=0.0.0.0 --port=${PORT:-5006} --allow-websocket-origin='*'"]

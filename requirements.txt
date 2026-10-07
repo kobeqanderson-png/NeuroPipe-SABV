@@ -1,4 +1,5 @@
 streamlit
+panel
 pandas>=2.0
 numpy
 seaborn

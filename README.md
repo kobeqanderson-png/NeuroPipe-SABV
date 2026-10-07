@@ -1,10 +1,10 @@
 # NeuroPipe-SABV
 
-**Public research beta · Open source under MIT · Methodological review invited**
+**Public research beta · Open source under MIT · Panel app · Methodological review invited**
 
 I built NeuroPipe-SABV to explore a question from behavioral research: how can sex as a biological variable stay visible as we move from raw data to analysis and interpretation?
 
-The project brings data preparation, sex-based grouping, visualization, and statistical exploration into a Streamlit workflow. I want researchers to be able to try it, inspect its assumptions, and challenge the parts that need work. A polished figure is not evidence that the analysis behind it is appropriate.
+The project brings data preparation, sex-based grouping, visualization, and statistical exploration into a Panel workflow. I want researchers to be able to try it, inspect its assumptions, and challenge the parts that need work. A polished figure is not evidence that the analysis behind it is appropriate.
 
 [Open the Streamlit Cloud beta](https://data-analysis-sabv.streamlit.app/) · [Production deployment notes](DEPLOYMENT.md) · [Review priorities and limitations](BETA_REVIEW.md) · [Report a problem](https://github.com/kobeqanderson-png/NeuroPipe-SABV/issues/new/choose)
 
@@ -29,12 +29,12 @@ python -m venv .venv
 # Activate: source .venv/bin/activate (macOS/Linux)
 # Or: .venv\Scripts\Activate.ps1 (Windows PowerShell)
 python -m pip install -r requirements.txt
-python -m streamlit run app.py
+panel serve panel_app.py --show --autoreload
 ```
 
 ## Production hosting
 
-Streamlit Community Cloud is convenient for demos, but inactive apps can hibernate. For a more reliable public endpoint, this repo now includes Docker and Render Blueprint configuration. See [DEPLOYMENT.md](DEPLOYMENT.md) for the always-on deployment path.
+Streamlit Community Cloud is convenient for demos, but inactive apps can hibernate. NeuroPipe-SABV now has a Panel implementation and Docker/Render configuration for a more reliable public endpoint. See [DEPLOYMENT.md](DEPLOYMENT.md) for the always-on deployment path.
 
 Use a synthetic or non-sensitive example first. Before interpreting outputs:
 
