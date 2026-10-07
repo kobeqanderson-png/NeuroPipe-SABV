@@ -1,9 +1,11 @@
-# Test Results Report
+# Historical Test Results Report
 
 **Project**: NeuroPipe-SABV  
 **Test Date**: April 1, 2026  
 **Total Tests**: 35 (20 Unit + 15 Stress)  
 **Pass Rate**: 100% ✅
+
+> **Current status: public research beta.** The April 2026 results below are preserved as a historical report and were not independently rerun in the October 2026 documentation revision. Reported coverage percentages and performance figures require reproduction; they do not establish general readiness or scientific validity. See [BETA_REVIEW.md](BETA_REVIEW.md).
 
 ---
 
@@ -17,7 +19,7 @@ NeuroPipe-SABV has been thoroughly tested across 35 distinct scenarios covering:
 - Performance under stress (10K rows, 100 columns, imbalanced data)
 - Edge case handling (missing values, extreme values, zero variance)
 
-**Verdict**: 🎉 **PRODUCTION READY** - All tests passed with excellent performance
+**Historical verdict withdrawn:** the reported test outcomes do not establish production readiness.
 
 ---
 
@@ -248,7 +250,7 @@ NeuroPipe-SABV has demonstrated:
 ✅ **Scalability**: Processes 100+ columns, 10K rows efficiently  
 ✅ **Usability**: Intuitive 8-step workflow with interactive controls  
 
-**Status**: **APPROVED FOR PRODUCTION USE** 🚀
+**Current status**: **Public research beta; independent review invited.**
 
 ---
 

@@ -1,53 +1,30 @@
 # Contributing to NeuroPipe-SABV
 
-Thank you for your interest in improving this project. This document covers how to report issues, propose changes, and run the test suite.
+I want this beta to improve through use, review, and criticism. Contributions can be code, statistical review, a reproducible failure, or an explanation of where the interface makes a decision difficult to inspect.
 
-## Reporting Issues
+## Report a problem
 
-If you find a bug or have a feature request, please open an issue on GitHub and include:
-- A minimal description of the problem
-- Steps to reproduce (if applicable)
-- Your Python version and operating system
-- The output of `pip list` (or `requirements.txt` contents)
+Use the repository's issue templates. Include the task, expected and observed behavior, commit if known, Python/package versions, and a minimal synthetic or shareable example. For methodological feedback, describe the study design, experimental unit, and the assumption you are questioning. Do not upload confidential data.
 
-## Development Setup
+## Development setup
+
+Follow the root README's virtual-environment and dependency instructions. Tests use pytest:
 
 ```bash
-git clone https://github.com/kobeqanderson-png/NeuroPipe-SABV.git
-cd NeuroPipe-SABV
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-pip install pytest
+python -m pip install pytest
+python -m pytest test_pipeline.py test_header_mapping.py test_artifact_detection.py -v
 ```
 
-## Running Tests
+Inspect `stress_tests.py` before running it. Record the exact command, environment, and results when reporting a test run. Passing checks do not establish validity for every study design.
 
-All tests are written with **pytest** and should be run with:
+## Pull requests
 
-```bash
-pytest test_pipeline.py -v
-```
+1. Create a focused branch from the current default branch.
+2. Explain the research or workflow problem and the behavior your change introduces.
+3. For calculation changes, include a small independently checkable example and relevant tests.
+4. Update documentation when assumptions, inputs, or outputs change.
+5. State limitations and any checks you could not complete.
 
-To run with coverage:
+Follow the style of the surrounding code. Avoid changing statistical behavior merely to make a figure look better or a result more significant.
 
-```bash
-pytest test_pipeline.py --cov=src --cov-report=term-missing
-```
-
-## Pull Request Process
-
-1. Fork the repository and create a feature branch (`git checkout -b feature/my-change`).
-2. Ensure all tests pass locally before submitting (`pytest test_pipeline.py`).
-3. Update documentation if your change affects user-facing behavior.
-4. Open a pull request with a clear description of the change and its motivation.
-
-## Code Style
-
-- Follow PEP 8 for Python code.
-- Add docstrings to new public functions.
-- Keep functions focused and modular (see `src/cleaning.py` and `src/features.py` for examples).
-
-## Questions?
-
-Feel free to open a GitHub Discussion or email the maintainers.
+For broader review questions, see [BETA_REVIEW.md](BETA_REVIEW.md). Use issues for discussion; no separate Discussions feature is required.

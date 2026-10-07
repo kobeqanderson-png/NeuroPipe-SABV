@@ -198,7 +198,7 @@ def render_top_navigation(current_page: str) -> None:
         <div class='top-nav-wrap'>
             <div class='top-nav-brand'>
                 <span class='top-nav-brand-mark'>NeuroPipe-SABV</span>
-                <span class='top-nav-brand-tag'>NIH SABV-Compliant Pipeline</span>
+                <span class='top-nav-brand-tag'>Public Research Beta</span>
             </div>
         """,
         unsafe_allow_html=True,

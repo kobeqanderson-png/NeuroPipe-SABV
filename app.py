@@ -381,22 +381,25 @@ st.markdown(
             <strong>NIH</strong> = National Institutes of Health • <strong>SABV</strong> = Sex as a Biological Variable
         </p>
         <div class="hero-shell">
-            <span class="hero-tag">NeuroPipe-SABV • Research Workflow Platform</span>
+            <span class="hero-tag">NeuroPipe-SABV • Public Research Beta</span>
             <h1 class="hero-title">NeuroPipe-SABV</h1>
             <p class="hero-copy">
-                An NIH SABV-compliant pipeline for preclinical behavioral neuroscience.
+                An experimental workflow for preclinical behavioral data with attention to sex as a biological variable.
                 Upload, curate, classify, compare, visualize, and model — in a single guided workflow.
             </p>
             <div class="hero-kpis">
                 <div class="hero-kpi"><b>7-step</b><span>guided analysis path</span></div>
-                <div class="hero-kpi"><b>NIH-ready</b><span>sex-based variable support</span></div>
-                <div class="hero-kpi"><b>Excel exports</b><span>publication-focused outputs</span></div>
+                <div class="hero-kpi"><b>Public beta</b><span>methodological review invited</span></div>
+                <div class="hero-kpi"><b>Excel exports</b><span>outputs for review</span></div>
             </div>
         </div>
     </section>
     """,
     unsafe_allow_html=True,
 )
+
+st.info("Public research beta: inspect sex metadata, cleaning choices, experimental units, and statistical assumptions before interpreting results. This tool does not certify NIH compliance.")
+st.markdown("[Review priorities](https://github.com/kobeqanderson-png/NeuroPipe-SABV/blob/main/BETA_REVIEW.md) · [Report a problem](https://github.com/kobeqanderson-png/NeuroPipe-SABV/issues/new/choose)")
 
 st.markdown("<section class='section-band'><h3>Pipeline Overview</h3></section>", unsafe_allow_html=True)
 
@@ -449,7 +452,7 @@ st.markdown(
         <p style="margin-bottom: 0.45rem; color: #b8c3db;">1. Use the top navigation to move through each step in order.</p>
         <p style="margin-bottom: 0.45rem; color: #b8c3db;">2. Pages reuse session state, so your data persists during analysis.</p>
         <p style="margin-bottom: 0.45rem; color: #b8c3db;">3. Navigate back anytime to revise assumptions or thresholds.</p>
-        <p style="margin-bottom: 0; color: #b8c3db;">4. Export polished outputs once processing and modeling are complete.</p>
+        <p style="margin-bottom: 0; color: #b8c3db;">4. Check assumptions and reference calculations before interpreting exported results.</p>
     </section>
     """,
     unsafe_allow_html=True,
@@ -470,14 +473,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.code("Anderson, K. Q., & Devan, B. (2026). NeuroPipe-SABV: An NIH SABV-Compliant Data Processing Pipeline for Preclinical Behavioral Neuroscience. Journal of Open Source Software. https://github.com/kobeqanderson-png/NeuroPipe-SABV", language="text")
+st.code("Anderson, K. Q., & Devan, B. (2026). NeuroPipe-SABV [Software, public beta]. https://github.com/kobeqanderson-png/NeuroPipe-SABV", language="text")
 
 st.markdown("**BibTeX:**")
 st.code("""@software{Anderson2026,
   author = {Anderson, Kobe Q. and Devan, Bryan},
-  title = {NeuroPipe-SABV: An NIH SABV-Compliant Data Processing Pipeline for Preclinical Behavioral Neuroscience},
+  title = {NeuroPipe-SABV: Public Research Beta for Preclinical Behavioral Data},
   year = {2026},
-  publisher = {Journal of Open Source Software},
+  note = {Software repository; record the release or commit used},
   url = {https://github.com/kobeqanderson-png/NeuroPipe-SABV}
 }""", language="bibtex")
 
